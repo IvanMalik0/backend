@@ -1,0 +1,47 @@
+﻿services:
+  authorization.hosts.api:
+    image: authorization.hosts.api
+    build:
+      context: .
+      dockerfile: src/Hosts/Authorization.Hosts.Api/Dockerfile
+    ports:
+      - "5300:8080"
+    environment:
+      - ConnectionStrings__PostgresAuthorizationDb=Server=postgres;Database=authorization;Username=postgres;Password=password;Port=5432
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - "postgres"
+    networks:
+      - auth-network
+
+  authorization.hosts.dbmigrator:
+    image: authorization.hosts.dbmigrator
+    build:
+      context: .
+      dockerfile: src/Hosts/Authorization.Hosts.DbMigrator/Dockerfile
+    environment:
+      - ConnectionStrings__PostgresAuthorizationDb=Server=postgres;Database=authorization;Username=postgres;Password=password;Port=5432
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - "postgres"
+    restart: on-failure
+    networks:
+      - auth-network
+
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks:
+      - auth-network
+
+volumes:
+  pg-data:
+    
+networks:
+  auth-network:
